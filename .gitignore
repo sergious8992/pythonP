@@ -39,3 +39,7 @@
 *.jar
 *.log
 *.log.gz
+
+#Directorys
+logs/
+world/
