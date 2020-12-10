@@ -33,7 +33,7 @@ class Server:
             deseado. Despues mediante el metodo .flush libera 
             stdin'''
 
-        self.server.stdin.write(command)
+        self.server.stdin.write(comando)
         self.server.stdin.flush()
 
     def output(self) -> bytes:
@@ -81,7 +81,12 @@ if __name__ == "__main__":
                     for _ in range(2):
                         log = server.output().readline()
                         print(f'{log.decode(errors="ignore")}', end="")
+
+                        if (not "Unknown or incomplete" in log.decode(errors="ignore")) and (not "Incorrect argument" in log.decode(errors="ignore")):
+                            break
                     
+                    _ = input()
+                elif comando == "":
                     _ = input()
                 elif comando[0] == '!':
                     print(f'Su comando ha sido: {comando}')
