@@ -45,6 +45,20 @@ class Window:
     '''TODO'''
     pass
 
+def print_output(stdout) -> None:
+    print(stdout.readline().decode(errors="ignore"), end="")
+
+def check_if_output(stdout: subprocess.PIPE) -> bool:
+    import threading
+    import time
+    wait = threading.Thread(target=time.sleep, args=[0.5])
+    output = threading.Thread(target=print_output, args=[stdout])
+    
+    wait.start()
+    output.start()
+    wait.join()
+    return 0
+
 if __name__ == "__main__":
 
 
@@ -77,13 +91,18 @@ if __name__ == "__main__":
                     comando = (comando+"\n").encode("utf-8")
                     print(f'{comando}')
                     server.command(comando)
+                    for _ in range(3):
+                        check_if_output(server.output())
 
-                    for _ in range(2):
-                        log = server.output().readline()
-                        print(f'{log.decode(errors="ignore")}', end="")
+                    # log = server.output().readline()
+                    # print(f'{log.decode(errors="ignore")}', end="")
 
-                        if (not "Unknown or incomplete" in log.decode(errors="ignore")) and (not "Incorrect argument" in log.decode(errors="ignore")):
-                            break
+                    # for _ in range(2):
+                    #     log = server.output().readline()
+                    #     print(f'{log.decode(errors="ignore")}', end="")
+
+                    #     if (not "Unknown or incomplete" in log.decode(errors="ignore")) and (not "Incorrect argument" in log.decode(errors="ignore")):
+                    #         break
                     
                     _ = input()
                 elif comando == "":
