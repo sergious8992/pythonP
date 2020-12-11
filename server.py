@@ -2,28 +2,26 @@ import socket
 import subprocess
 import os
 import tkinter
+import threading
+import time
 
 class Server: 
     ''' Server class, controla el servidor y todas sus funciones '''
 
     def __init__(self) -> None:
         '''__init__ metodo inicia la clase con dos variables
-        "server_start_bat" donde se guarda el nombre del archivo .bat
-        "dir" donde se guarda el directorio actual'''
+        "server_start_bat" donde se guarda el nombre del archivo .bat,
+        "dir" donde se guarda el directorio actual.'''
         self.server_start_bat = "start.bat" 
-        '''Nombre del archivo .bat'''
-
-        self.dir = os.getcwd()
-        """Directorio actual """              
-        
+        self.dir = os.getcwd()        
     def start_server(self) -> bool: 
-        ''' Empieza el servidor devolviendo True '''
+        ''' Empieza el servidor devolviendo True.'''
         self.server = subprocess.Popen(self.server_start_bat, cwd=self.dir, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE ,text=False)
         return True
 
     def stop_server(self) -> None:
         '''Para el servidor enviado el comando "stop"
-        haciendo uso del metodo .communicate()'''
+        haciendo uso del metodo .communicate().'''
 
         self.command('stop\n'.encode('utf-8'))
         self.server.communicate()
@@ -31,14 +29,13 @@ class Server:
     def command(self, comando: bytes ) -> None:
         ''' Mediante subprocess.stdin introduce el comando
             deseado. Despues mediante el metodo .flush libera 
-            stdin'''
+            stdin.'''
 
         self.server.stdin.write(comando)
         self.server.stdin.flush()
 
     def output(self) -> bytes:
-        '''Devuelve el output de la consola como
-        bytes'''
+        '''Devuelve el output de la consola como bytes.'''
         return self.server.stdout
 
 class Window:
@@ -46,11 +43,12 @@ class Window:
     pass
 
 def print_output(stdout) -> None:
+    '''Hace print del server.stdout'''
     print(stdout.readline().decode(errors="ignore"), end="")
 
-def check_if_output(stdout: subprocess.PIPE) -> bool:
-    import threading
-    import time
+def check_if_output(stdout: subprocess.PIPE) -> int:
+    '''Crea 2 hilos, en uno espera por 0.5 y en otro imprime stdout, en el caso de que print_output se freeze,
+    la funcion acabara en 0.5s haciendo que el programa no quede freze.'''
     wait = threading.Thread(target=time.sleep, args=[0.5])
     output = threading.Thread(target=print_output, args=[stdout])
     
