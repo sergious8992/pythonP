@@ -12,14 +12,19 @@ class Window:
         self.root.geometry("800x600")
         self.root.maxsize(size[0], size[1])
         self.root.minsize(size[0], size[1])
+        
+        self.build_minecraft_frame()
+        self.build_python_frame()
 
+        self.root.mainloop()
+
+    def build_python_frame(self) -> None:
         self.python_frame = tk.Frame(self.root, bg='grey', width=350, height=575)
         self.python_frame.pack_propagate(False)
         self.python_frame.pack(side=tk.LEFT)
 
-        self.build_minecraft_frame()
-
-        self.root.mainloop()
+        self.clear_minecraft_text_button = tk.Button(master = self.python_frame, text="Clear", command = self.clear_minecraft_console, )
+        self.clear_minecraft_text_button.place(x = 0, y = 0)
 
     def build_minecraft_frame(self) -> None:
         self.minecraft_frame = tk.Frame(self.root, bg='green', width=350, height=575)
@@ -44,11 +49,15 @@ class Window:
 
         self.minecraft_entry.bind('<Return>', self.send_minecraft_command)
 
-
     def send_minecraft_command(self, _: str) -> None:
         self.minecraft_text.configure(state='normal')
         self.minecraft_text.insert(tk.INSERT, ">>" + self.minecraft_entry.get() + "\n")
         self.minecraft_entry.delete(0, tk.END)
+        self.minecraft_text.configure(state='disable')
+
+    def clear_minecraft_console(self) -> None:
+        self.minecraft_text.configure(state='normal')
+        self.minecraft_text.delete(1.0, tk.END)
         self.minecraft_text.configure(state='disable')
 
 if __name__ == "__main__":

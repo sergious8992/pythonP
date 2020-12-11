@@ -91,16 +91,6 @@ if __name__ == "__main__":
                     server.command(comando)
                     for _ in range(3):
                         check_if_output(server.output())
-
-                    # log = server.output().readline()
-                    # print(f'{log.decode(errors="ignore")}', end="")
-
-                    # for _ in range(2):
-                    #     log = server.output().readline()
-                    #     print(f'{log.decode(errors="ignore")}', end="")
-
-                    #     if (not "Unknown or incomplete" in log.decode(errors="ignore")) and (not "Incorrect argument" in log.decode(errors="ignore")):
-                    #         break
                     
                     _ = input()
                 elif comando == "":
@@ -111,8 +101,6 @@ if __name__ == "__main__":
                 else:
                     print(f'Comando incorrecto, debe empezar por "!"')
                     _ = input()
-
-    lista = [1,2,3,4, "hola"]
 
     print("El servidor se ha cerrado correctamente!", end="")
     _ = input()
