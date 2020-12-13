@@ -60,6 +60,9 @@ class Window:
         self.minecraft_text.delete(1.0, tk.END)
         self.minecraft_text.configure(state='disable')
 
+    def recive_commands():
+        #TODO
+        pass
 if __name__ == "__main__":
     
     port: int
