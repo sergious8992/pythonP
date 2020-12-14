@@ -7,20 +7,38 @@ import time
 
 class Server:
 
-    
+    socket.setdefaulttimeout(1)
+
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((socket.gethostname(), 1414))
+        print(socket.gethostname())
+        self.clients = []
 
-    def start_listening(self):
-
-        while True:
+    def __start_listening(self) -> socket.socket:
+        self.sock.listen(5)
+        try:
             clientsocket, address = self.sock.accept()
-            print(f'Connection from {address} has been stablished!')
+            if (clientsocket) and (clientsocket not in self.clients):
+                print(f'\n\nConnection from {address} has been stablished!\n\n')
+                self.clients.append(clientsocket)
+            else:
+                return None
+        except:
+            return None
 
-    def send_log(self, clientsocket: socket.socket):
-        clientsocket.send(minecraft_server_log)
+    def __send_log(self, minecraft_server_log: bytes ="".encode("utf-8")) -> None:
+        for client in self.clients:
+            client.send(minecraft_server_log)
+        return None
 
+    def main(self, log: bytes = None) -> None:
+        self.__start_listening()
+        
+        if log:
+            self.__send_log(minecraft_server_log=log)
+        
+        return None
 class Minecraft_Server: 
     ''' Server class, controla el servidor y todas sus funciones '''
 
@@ -36,19 +54,19 @@ class Minecraft_Server:
         haciendo uso del metodo .communicate().'''
 
         self.command('stop\n'.encode('utf-8'))
-        self.server.communicate()
+        self.mserver.communicate()
 
     def command(self, comando: bytes ) -> None:
         ''' Mediante subprocess.stdin introduce el comando
             deseado. Despues mediante el metodo .flush libera 
             stdin.'''
 
-        self.server.stdin.write(comando)
-        self.server.stdin.flush()
+        self.mserver.stdin.write(comando)
+        self.mserver.stdin.flush()
    
     def start_server(self) -> bool: 
         ''' Empieza el servidor devolviendo True.'''
-        self.server = subprocess.Popen(self.server_start_bat, 
+        self.mserver = subprocess.Popen(self.server_start_bat, 
                                         cwd=self.dir, 
                                         shell=True, 
                                         stdin=subprocess.PIPE, 
@@ -58,7 +76,7 @@ class Minecraft_Server:
    
     def output(self) -> bytes:
         '''Devuelve el output de la consola como bytes.'''
-        return self.server.stdout
+        return self.mserver.stdout
 
 class Window:
     '''TODO'''
@@ -67,11 +85,11 @@ class Window:
 class Log:
     """ """
     def __init__(self) -> None:
-        self.__message: str
+        self.message: str = ""
         self.__data: subprocess.STDOUT
 
     def __read_data(self, __data) -> None:
-        self.__message = __data.readline()
+        self.message = __data.readline()
     
     def __process_output(self, server_output: subprocess.STDOUT) -> None:
         wait = threading.Thread(target=time.sleep, args=[0.5])
@@ -80,29 +98,33 @@ class Log:
         output.start()
         wait.join()   
     def flush(self) -> True:
-        self.__message = ""
+        self.message = ""
         return True
 
     def main(self, minecraft_server: Minecraft_Server) -> bytes:
         """Returns bytes"""
         self.__process_output(minecraft_server.output())
-        return self.__message
+        return self.message
 
 if __name__ == "__main__":
 
     minecraft_comands = ('tp', 'gamemode', 'gamerule', 'summon','weahter', 
                         'toggledownfalse', 'locate','tell', 'time', 
                         'ban', 'ban-ip', 'kick','op', 'deop', 'pardon') 
-    server = Minecraft_Server()
-    Running = server.start_server()
+    mserver = Minecraft_Server()
+    sserver = Server()
+    sserver.main()
+    Running = mserver.start_server()
     minecraft_log = Log()
 
     while Running:
-        log = server.output().readline()                
+        log = mserver.output().readline()                
         if type(log) != "_io.BufferedReader":           # _io.BufferedReader -> Todavia no hay ningun output del servidor
+            sserver.main(log=log)
             print(log.decode(errors="ignore"), end="")  
 
         if "Done" in log.decode(errors="ignore"):
+            sserver.main(log=log)
             server_is_up = True
 
             while server_is_up:
@@ -111,19 +133,20 @@ if __name__ == "__main__":
                 comando = str(input())
 
                 if comando == 'stop':
-                    server.stop_server()
+                    mserver.stop_server()
                     Running = False
                     server_is_up = False
 
                 elif comando.split(" ")[0] in minecraft_comands:
                     comando = (comando+"\n").encode("utf-8")
                     print(f'{comando}')
-                    server.command(comando)
+                    mserver.command(comando)
                     message = bytes("", "utf-8")
                     for _ in range(3):
-                        if message != (new:=minecraft_log.main(minecraft_server= server)):
+                        if message != (new:=minecraft_log.main(minecraft_server= mserver)):
                             message = new
                             del(new)
+                            sserver.main(log=message)
                         else:
                             message = bytes("", "utf-8")
                         print(f'{message.decode(errors="ignore")}', end="")
