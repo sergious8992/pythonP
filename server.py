@@ -7,7 +7,7 @@ import time
 
 class Server:
 
-    socket.setdefaulttimeout(1)
+    socket.setdefaulttimeout(0.5)
 
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,7 +15,8 @@ class Server:
         print(socket.gethostname())
         self.clients = []
 
-    def __start_listening(self) -> socket.socket:
+    def __start_listening(self) -> None:
+        """ -> None"""
         self.sock.listen(5)
         try:
             clientsocket, address = self.sock.accept()
@@ -28,17 +29,18 @@ class Server:
             return None
 
     def __send_log(self, minecraft_server_log: bytes ="".encode("utf-8")) -> None:
+        """ -> None"""
         for client in self.clients:
             client.send(minecraft_server_log)
         return None
 
     def main(self, log: bytes = None) -> None:
+        """ -> None"""
         self.__start_listening()
-        
         if log:
             self.__send_log(minecraft_server_log=log)
-        
         return None
+
 class Minecraft_Server: 
     ''' Server class, controla el servidor y todas sus funciones '''
 
@@ -85,19 +87,24 @@ class Window:
 class Log:
     """ """
     def __init__(self) -> None:
+        """ -> None"""
         self.message: str = ""
         self.__data: subprocess.STDOUT
 
     def __read_data(self, __data) -> None:
+        """ -> None"""
         self.message = __data.readline()
     
     def __process_output(self, server_output: subprocess.STDOUT) -> None:
+        """ -> None"""
         wait = threading.Thread(target=time.sleep, args=[0.5])
         output = threading.Thread(target=self.__read_data, args=[server_output])
         wait.start()
         output.start()
         wait.join()   
+
     def flush(self) -> True:
+        """ -> bool"""
         self.message = ""
         return True
 
@@ -108,7 +115,7 @@ class Log:
 
 if __name__ == "__main__":
 
-    minecraft_comands = ('tp', 'gamemode', 'gamerule', 'summon','weahter', 
+    minecraft_comands = ('tp', 'gamemode', 'gamerule', 'summon','weather', 
                         'toggledownfalse', 'locate','tell', 'time', 
                         'ban', 'ban-ip', 'kick','op', 'deop', 'pardon') 
     mserver = Minecraft_Server()
@@ -116,6 +123,7 @@ if __name__ == "__main__":
     sserver.main()
     Running = mserver.start_server()
     minecraft_log = Log()
+    message = bytes("", "utf-8")
 
     while Running:
         log = mserver.output().readline()                
@@ -141,14 +149,14 @@ if __name__ == "__main__":
                     comando = (comando+"\n").encode("utf-8")
                     print(f'{comando}')
                     mserver.command(comando)
-                    message = bytes("", "utf-8")
                     for _ in range(3):
                         if message != (new:=minecraft_log.main(minecraft_server= mserver)):
                             message = new
                             del(new)
                             sserver.main(log=message)
+                            
                         else:
-                            message = bytes("", "utf-8")
+                            pass
                         print(f'{message.decode(errors="ignore")}', end="")
                     _ = input()
                 elif comando == "":
