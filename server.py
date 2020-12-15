@@ -6,18 +6,19 @@ import threading
 import time
 
 class Server:
-
+    '''Server class'''
     socket.setdefaulttimeout(0.5)
 
     def __init__(self):
+        ''' '''
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((socket.gethostname(), 1414))
         print(socket.gethostname())
         self.clients = []
 
     def __start_listening(self) -> None:
-        """ -> None"""
-        self.sock.listen(5)
+        ''' -> None'''
+        self.sock.listen(3)
         try:
             clientsocket, address = self.sock.accept()
             if (clientsocket) and (clientsocket not in self.clients):
@@ -29,13 +30,13 @@ class Server:
             return None
 
     def __send_log(self, minecraft_server_log: bytes ="".encode("utf-8")) -> None:
-        """ -> None"""
+        ''' -> None'''
         for client in self.clients:
             client.send(minecraft_server_log)
         return None
 
     def main(self, log: bytes = None) -> None:
-        """ -> None"""
+        ''' -> None'''
         self.__start_listening()
         if log:
             self.__send_log(minecraft_server_log=log)
@@ -45,9 +46,9 @@ class Minecraft_Server:
     ''' Server class, controla el servidor y todas sus funciones '''
 
     def __init__(self) -> None:
-        '''__init__ metodo inicia la clase con dos variables
-        "server_start_bat" donde se guarda el nombre del archivo .bat,
-        "dir" donde se guarda el directorio actual.'''
+        '''__init__ method iniciates the class with two variabless
+        "server_start_bat" where it saves the file's name .bat,
+        "dir"  it saves to the current working directory.'''
         self.server_start_bat = "start.bat" 
         self.dir = os.getcwd()        
 
@@ -85,18 +86,18 @@ class Window:
     pass
 
 class Log:
-    """ """
+    ''' '''
     def __init__(self) -> None:
-        """ -> None"""
-        self.message: str = ""
+        ''' -> None'''
+        self.message: bytes = bytes("")
         self.__data: subprocess.STDOUT
 
     def __read_data(self, __data) -> None:
-        """ -> None"""
+        ''' -> None'''
         self.message = __data.readline()
     
     def __process_output(self, server_output: subprocess.STDOUT) -> None:
-        """ -> None"""
+        ''' -> None'''
         wait = threading.Thread(target=time.sleep, args=[0.5])
         output = threading.Thread(target=self.__read_data, args=[server_output])
         wait.start()
@@ -104,12 +105,12 @@ class Log:
         wait.join()   
 
     def flush(self) -> True:
-        """ -> bool"""
-        self.message = ""
+        ''' -> bool'''
+        self.message = bytes("")
         return True
 
     def main(self, minecraft_server: Minecraft_Server) -> bytes:
-        """Returns bytes"""
+        '''Returns bytes'''
         self.__process_output(minecraft_server.output())
         return self.message
 
@@ -118,9 +119,9 @@ if __name__ == "__main__":
     minecraft_comands = ('tp', 'gamemode', 'gamerule', 'summon','weather', 
                         'toggledownfalse', 'locate','tell', 'time', 
                         'ban', 'ban-ip', 'kick','op', 'deop', 'pardon') 
-    mserver = Minecraft_Server()
     sserver = Server()
     sserver.main()
+    mserver = Minecraft_Server()
     Running = mserver.start_server()
     minecraft_log = Log()
     message = bytes("", "utf-8")
@@ -132,12 +133,10 @@ if __name__ == "__main__":
             print(log.decode(errors="ignore"), end="")  
 
         if "Done" in log.decode(errors="ignore"):
-            sserver.main(log=log)
             server_is_up = True
 
             while server_is_up:
-                os.system("cls")
-                print(f'Servidor abierto correctamente!\nEsperando comandos: ', end="")
+                print(f'\n\n\nServidor abierto correctamente!\nEsperando comandos: ', end="")
                 comando = str(input())
 
                 if comando == 'stop':
@@ -154,10 +153,9 @@ if __name__ == "__main__":
                             message = new
                             del(new)
                             sserver.main(log=message)
-                            
+                            print(f'{message.decode(errors="ignore")}', end="")
                         else:
                             pass
-                        print(f'{message.decode(errors="ignore")}', end="")
                     _ = input()
                 elif comando == "":
                     _ = input()
