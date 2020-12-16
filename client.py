@@ -23,13 +23,16 @@ class Client:
         except:
             return None
 
-    def connect(self) -> bool:
+    def connect(self, ip: str = socket.gethostname()) -> bool:
         """ 
         if connection succed -> True \n
         if connection does not succed -> False
         """
+        if ip == "":
+            ip = socket.gethostname()
         try:
-            self.sock.connect((socket.gethostname(), 1414))
+            print(ip)
+            self.sock.connect((ip, 1414))
             return True
         except:
             return False
@@ -73,9 +76,9 @@ class Window:
 
         self.clear_minecraft_text_button.place(x = 0, y = 1)
 
-        self.connect_button = tk.Button(master = self.python_frame, 
+        self.connect_button = tk.Button(master=self.python_frame, 
                                         text="Conenct",
-                                        command = cliente.connect,)
+                                        command=lambda: cliente.connect(ip=self.ip_choose.get()))
         self.connect_button.place(x=0, y=40)
 
         self.ip_status_label = tk.Label(self.python_frame, text="....", bg="#a881cc")
@@ -104,7 +107,9 @@ class Window:
         self.server_frame = tk.Frame(self.root, bg="#c881cc", width = 300, height= 300)
         self.server_frame.place(x=490, y=5)
 
-        self.ip_label = tk.Label(self.server_frame, text="IP ADRESS: ", bg="#c881cc")
+        self.ip_label = tk.Label(self.server_frame,
+                                text="IP ADRESS: ",
+                                bg="#c881cc")
         self.ip_label.place(x=10, y=10)
         
         self.ip_choose = ttk.Combobox(self.server_frame,  
@@ -191,7 +196,6 @@ class Window:
                 self.minecraft_text.configure(state='disable')
             else:
                 pass
-
 if __name__ == "__main__":
     
     port: int
