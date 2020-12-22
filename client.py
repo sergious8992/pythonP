@@ -23,6 +23,10 @@ class Client:
         except:
             return None
 
+    def send_command(self, command):
+        self.sock.send(command.encode("utf-8"))
+        return True
+
     def connect(self, ip: str = socket.gethostname()) -> bool:
         """ 
         if connection succed -> True \n
@@ -40,9 +44,10 @@ class Client:
 
 class Window:
 
-    def __init__(self):
+    def __init__(self, cliente: Client):
         self.__root = None
         self.__ip_list = set({})
+        self.__cliente = cliente
         try:
             with open("ips.txt", "r+") as ip:
                 for line in ip:
@@ -50,7 +55,7 @@ class Window:
         except:
             pass
 
-    def start_gui(self, cliente: Client) -> None:
+    def start_gui(self) -> None:
         """ -> None"""
         size = (800, 600)
         self.__root = tk.Tk()
@@ -59,14 +64,14 @@ class Window:
         self.__root.minsize(size[0], size[1])
 
         self.__build_minecraft_frame()
-        self.__build_python_frame(cliente)
+        self.__build_python_frame()
         self.__build_server_frame()
         reciving = threading.Thread(target=self.__recive_sminecraft_output,
-                                    args=[cliente])
+                                    args=[self.__cliente])
         reciving.start()
         self.__root.mainloop()
 
-    def __build_python_frame(self, client: Client) -> None:
+    def __build_python_frame(self) -> None:
         """ -> None"""
         self.__python_frame = tk.Frame(self.__root, bg='grey', width=350, height=300)
         self.__python_frame.pack_propagate(False)
@@ -80,7 +85,7 @@ class Window:
 
         self.__connect_button = tk.Button(master=self.__python_frame,
                                           text="Conenct",
-                                          command=lambda: cliente.connect(ip=self.__ip_choose.get()))
+                                          command=lambda: self.__cliente.connect(ip=self.__ip_choose.get()))
         self.__connect_button.place(x=0, y=40)
 
         self.__ip_status_label = tk.Label(self.__python_frame, text="....", bg="#a881cc")
@@ -146,6 +151,10 @@ class Window:
         """ -> None"""
         self.__minecraft_text.configure(state='normal')
         self.__minecraft_text.insert(tk.INSERT, ">>" + self.__minecraft_entry.get() + "\n")
+        try:
+            self.__cliente.send_command(self.__minecraft_entry.get()+"\n")
+        except:
+            pass
         self.__minecraft_entry.delete(0, tk.END)
         self.__minecraft_text.configure(state='disable')
 
@@ -158,6 +167,7 @@ class Window:
         with open("ips.txt", "r+") as ip:
             for line in ip:
                 if line.rstrip("\n") == self.__ip_entry.get():
+                    self.__ip_status_label.after(200, self.__ip_status_label.config(text="Saved!", fg="green"))
                     return False
             ip.write(self.__ip_entry.get() + "\n")
             self.__ip_list.add(str(self.__ip_entry.get()).strip())
@@ -196,7 +206,7 @@ class Window:
         while True:
             if (log := client.recive_log()) is not None and (log != ""):
                 self.__minecraft_text.configure(state='normal')
-                self.__minecraft_text.insert(tk.INSERT, ">>" + log + "\n")
+                self.__minecraft_text.insert(tk.INSERT, ">>" + log)
                 self.__minecraft_text.see('end')
                 self.__minecraft_text.configure(state='disable')
             else:
@@ -208,5 +218,5 @@ if __name__ == "__main__":
     server: str
 
     cliente = Client()
-    client_gui = Window()
-    client_gui.start_gui(cliente)
+    client_gui = Window(cliente=cliente)
+    client_gui.start_gui()
