@@ -153,7 +153,7 @@ if __name__ == "__main__":
             server_is_up = True
             print(f'\n\n\nServidor abierto correctamente!\nEsperando comandos: ', end="")
             while server_is_up:
-                #comando = str(input())
+                # comando = str(input())
                 comando = sserver.recieve_comand()
                 if comando == 'stop':
                     mserver.stop_server()
@@ -161,7 +161,7 @@ if __name__ == "__main__":
                     server_is_up = False
 
                 elif comando.split(" ")[0] in minecraft_comands:
-                    comando = (comando + "\n").encode("utf-8")
+                    comando = comando.encode("utf-8")
                     print(f'{comando}')
                     mserver.command(comando)
                     for _ in range(3):
@@ -182,6 +182,6 @@ if __name__ == "__main__":
                 else:
                     print(f'Comando incorrecto, debe empezar por "!"')
                     #_ = input()
-                    
+
     print("El servidor se ha cerrado correctamente!", end="")
     _ = input()
