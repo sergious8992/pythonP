@@ -6,7 +6,6 @@ import threading
 import time
 import select
 from subprocess import Popen
-from typing import Any, Union
 
 
 class Server:
@@ -39,9 +38,13 @@ class Server:
             client.send(minecraft_server_log)
         return None
 
-    def __recieve_comand(self, client_socket: socket.socket):
-        # TODO
-        pass
+    def recieve_comand(self):
+        while True:
+            try:
+                command = self.clients[0].recv(1024).decode("utf-8", errors="ignore")
+                return command
+            except:
+                pass
 
     def main(self, log: bytes = None) -> None:
         """ -> None"""
@@ -58,6 +61,7 @@ class Minecraft_Server:
         """__init__ method iniciates the class with two variabless
         "server_start_bat" where it saves the file's name .bat,
         "dir"  it saves to the current working directory."""
+        self.mserver: subprocess.Popen
         self.server_start_bat = "start.bat"
         self.dir = os.getcwd()
 
@@ -147,11 +151,10 @@ if __name__ == "__main__":
 
         if "Done" in log.decode(errors="ignore"):
             server_is_up = True
-
+            print(f'\n\n\nServidor abierto correctamente!\nEsperando comandos: ', end="")
             while server_is_up:
-                print(f'\n\n\nServidor abierto correctamente!\nEsperando comandos: ', end="")
-                comando = str(input())
-
+                #comando = str(input())
+                comando = sserver.recieve_comand()
                 if comando == 'stop':
                     mserver.stop_server()
                     Running = False
@@ -169,15 +172,16 @@ if __name__ == "__main__":
                             print(f'{message.decode(errors="ignore")}', end="")
                         else:
                             pass
-                    _ = input()
+                    # _ = input()
                 elif comando == "":
-                    _ = input()
+                    pass
+                    #_ = input()
                 elif comando[0] == '!':
                     print(f'Su comando ha sido: {comando}')
-                    _ = input()
+                    #_ = input()
                 else:
                     print(f'Comando incorrecto, debe empezar por "!"')
-                    _ = input()
+                    #_ = input()
 
     print("El servidor se ha cerrado correctamente!", end="")
     _ = input()
