@@ -74,11 +74,14 @@ class Minecraft_Server:
 
     def command(self, comando: bytes) -> None:
         """ Mediante subprocess.stdin introduce el comando
-            deseado. Despues mediante el metodo .flush libera
-            stdin."""
+            deseado.
+            Despues mediante el metodo .flush libera
+            stdin y stdout.
+        """
 
         self.mserver.stdin.write(comando)
         self.mserver.stdin.flush()
+        self.mserver.stdout.flush()
 
     def start_server(self) -> bool:
         """ Empieza el servidor devolviendo True."""
@@ -90,9 +93,11 @@ class Minecraft_Server:
                                         text=False)
         return True
 
-    def output(self):
+    def output(self) -> subprocess.STDOUT:
         """Devuelve el output de la consola como bytes."""
-        return self.mserver.stdout
+        output = self.mserver.stdout
+        self.mserver.stdout.flush()
+        return output
 
 
 class Window:
@@ -108,13 +113,13 @@ class Log:
         self.message: bytes = bytes("", encoding="utf-8")
         self.__data: subprocess.STDOUT
 
-    def __read_data(self, __data) -> None:
+    def __read_data(self, __data: subprocess.STDOUT) -> None:
         """ -> None"""
         self.message = __data.readline()
 
     def __process_output(self, server_output: subprocess.STDOUT) -> None:
         """ -> None"""
-        wait = threading.Thread(target=time.sleep, args=[0.5])
+        wait = threading.Thread(target=time.sleep, args=[0.2])
         output = threading.Thread(target=self.__read_data, args=[server_output])
         wait.start()
         output.start()
@@ -155,35 +160,35 @@ if __name__ == "__main__":
             while server_is_up:
                 # comando = str(input())
                 comando = sserver.recieve_comand()
-                if comando == 'stop':
+                if comando == 'stop\n' or comando == 'stop':
                     mserver.stop_server()
                     Running = False
                     server_is_up = False
-
                 elif comando.split(" ")[0] in minecraft_comands:
                     fifo_log = []
+                    message = ""
                     comando = comando.encode("utf-8")
                     print(f'{comando}')
                     mserver.command(comando)
                     for _ in range(3):
                         if message != (new := minecraft_log.main(minecraft_server=mserver)):
                             message = new
-                            del new
                             fifo_log.append(message)
                         else:
                             pass
                     for log in fifo_log:
                         sserver.send_log(minecraft_server_log=log)
+                    del new
                     # _ = input()
                 elif comando == "":
                     pass
-                    #_ = input()
+                    # _ = input()
                 elif comando[0] == '!':
                     print(f'Su comando ha sido: {comando}')
-                    #_ = input()
+                    # _ = input()
                 else:
                     print(f'Comando incorrecto, debe empezar por "!"')
-                    #_ = input()
+                    # _ = input()
 
     print("El servidor se ha cerrado correctamente!", end="")
     _ = input()
