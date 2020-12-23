@@ -32,13 +32,13 @@ class Server:
         except:
             return None
 
-    def __send_log(self, minecraft_server_log: bytes = "".encode("utf-8")) -> None:
+    def send_log(self, minecraft_server_log: bytes = "".encode("utf-8")) -> None:
         """ -> None"""
         for client in self.clients:
             client.send(minecraft_server_log)
         return None
 
-    def recieve_comand(self):
+    def recieve_comand(self) -> str:
         while True:
             try:
                 command = self.clients[0].recv(1024).decode("utf-8", errors="ignore")
@@ -50,7 +50,7 @@ class Server:
         """ -> None"""
         self.__start_listening()
         if log:
-            self.__send_log(minecraft_server_log=log)
+            self.send_log(minecraft_server_log=log)
         return None
 
 
@@ -161,17 +161,19 @@ if __name__ == "__main__":
                     server_is_up = False
 
                 elif comando.split(" ")[0] in minecraft_comands:
+                    fifo_log = []
                     comando = comando.encode("utf-8")
                     print(f'{comando}')
                     mserver.command(comando)
                     for _ in range(3):
                         if message != (new := minecraft_log.main(minecraft_server=mserver)):
                             message = new
-                            del (new)
-                            sserver.main(log=message)
-                            print(f'{message.decode(errors="ignore")}', end="")
+                            del new
+                            fifo_log.append(message)
                         else:
                             pass
+                    for log in fifo_log:
+                        sserver.send_log(minecraft_server_log=log)
                     # _ = input()
                 elif comando == "":
                     pass
