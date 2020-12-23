@@ -155,6 +155,7 @@ class Window:
             self.__cliente.send_command(self.__minecraft_entry.get()+"\n")
         except:
             pass
+        self.__minecraft_text.see('end')
         self.__minecraft_entry.delete(0, tk.END)
         self.__minecraft_text.configure(state='disable')
 
