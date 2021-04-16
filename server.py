@@ -6,14 +6,15 @@ import threading
 import time
 import select
 from subprocess import Popen
+from typing import Any, Union
 
 
 class Server:
     """Server class"""
-    socket.setdefaulttimeout(0.5)
 
-    def __init__(self) -> None:
+    def __init__(self, defaulttimeout: float = 0.5) -> None:
         """ -> None """
+        socket.setdefaulttimeout(defaulttimeout)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((socket.gethostname(), 1414))
@@ -41,7 +42,8 @@ class Server:
     def recieve_comand(self) -> str:
         while True:
             try:
-                command = self.clients[0].recv(1024).decode("utf-8", errors="ignore")
+                for cliente in self.clients:
+                    command = cliente.recv(1024).decode("utf-8", errors="ignore")
                 return command
             except:
                 pass
@@ -95,9 +97,7 @@ class Minecraft_Server:
 
     def output(self) -> subprocess.STDOUT:
         """Devuelve el output de la consola como bytes."""
-        output = self.mserver.stdout
-        self.mserver.stdout.flush()
-        return output
+        return self.mserver.stdout
 
 
 class Window:
@@ -112,14 +112,18 @@ class Log:
         """ -> None"""
         self.message: bytes = bytes("", encoding="utf-8")
         self.__data: subprocess.STDOUT
+        self.__fifo = []
 
     def __read_data(self, __data: subprocess.STDOUT) -> None:
         """ -> None"""
-        self.message = __data.readline()
+        for _ in range(2):                              # SI EL PROGRAMA NO FUNCIONA, ELIMINAR EL FOR           
+            self.message = __data.readline()
+            self.__fifo.append(self.message)
 
     def __process_output(self, server_output: subprocess.STDOUT) -> None:
         """ -> None"""
-        wait = threading.Thread(target=time.sleep, args=[0.2])
+        time_to_wait = 0.2
+        wait = threading.Thread(target=time.sleep, args=[time_to_wait])
         output = threading.Thread(target=self.__read_data, args=[server_output])
         wait.start()
         output.start()
@@ -130,18 +134,27 @@ class Log:
         self.message = bytes("")
         return True
 
-    def main(self, minecraft_server: Minecraft_Server) -> bytes:
+    def main(self, minecraft_server: Minecraft_Server) -> list[bytes]:
         """Returns bytes"""
-        self.__process_output(minecraft_server.output())
-        return self.message
+        self.__fifo = []
+        for _ in range(3):
+            self.__process_output(minecraft_server.output())
+        return self.__fifo
 
 
 if __name__ == "__main__":
 
+    defaulttiemout = 0.5
     minecraft_comands = ('tp', 'gamemode', 'gamerule', 'summon', 'weather',
                          'toggledownfalse', 'locate', 'tell', 'time',
                          'ban', 'ban-ip', 'kick', 'op', 'deop', 'pardon')
-    sserver = Server()
+
+    options = input("Quiere conocer los parametros (y/N)?")
+    if options.lower() == "y":
+        print(f'defaulttimeout = {defaulttiemout}\n'
+              f'minecraft commands = {minecraft_comands}')
+
+    sserver = Server(defaulttimeout=defaulttiemout,)
     sserver.main()
     mserver = Minecraft_Server()
     Running = mserver.start_server()
@@ -165,20 +178,13 @@ if __name__ == "__main__":
                     Running = False
                     server_is_up = False
                 elif comando.split(" ")[0] in minecraft_comands:
-                    fifo_log = []
                     message = ""
                     comando = comando.encode("utf-8")
                     print(f'{comando}')
                     mserver.command(comando)
-                    for _ in range(3):
-                        if message != (new := minecraft_log.main(minecraft_server=mserver)):
-                            message = new
-                            fifo_log.append(message)
-                        else:
-                            pass
+                    fifo_log = minecraft_log.main(minecraft_server=mserver)
                     for log in fifo_log:
                         sserver.send_log(minecraft_server_log=log)
-                    del new
                     # _ = input()
                 elif comando == "":
                     pass
